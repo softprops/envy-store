@@ -15,5 +15,27 @@ envy-store = "0.1"
 
 See the [demo example](examples/demo.rs) for an example application and [documentation](https://softprops.github.io/envy-store) for more information
 
+## 🤔 Why AWS Parameter Store
+
+Environment variables are a perfectly good and probably
+best solution for storing application configuration as they are more or less
+universally supported across runtimes and languages.
+
+As an application grows additional factors need may come into consideration.
+
+1) Security. Environment variables alone are a poor transport for secret information
+as they can easily be leaked in their plain text format. AWS Parameter Store has
+built-in support for storing values in encrypted format preventing unwanted access
+from prying eyes.
+
+2) Management. The strategy for configuring environment variables for your application
+will likely vary and become less managable over time. The source of truth for their
+values may require some centralization in order to manage. Systems exist for helping
+you manage these. AWS Parameter Store is a self managed system as a service removing
+the need for you to operate one of these systems yourself.
+
+3) Access control. Related to encryption security, you may also want to limit _who_ can access
+configuration. Identity access management is built into AWS so you don't have
+to implement this yourself.
 
 Doug Tangren (softprops) 2018
