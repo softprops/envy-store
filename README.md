@@ -44,7 +44,8 @@ you manage these. AWS Parameter Store is a self managed system as a service remo
 the need for you to operate one of these systems yourself.
 
 3) Access control. Related to encryption security, you may also want to limit _who_ can access
-configuration. Identity access management is built into AWS so you don't have
-to implement this yourself.
+configuration. Identity access management is [built into AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html) so you don't have to implement this yourself.
+
+> 💡 Note that as AWS Parameter Store is a hosted service, it comes with limits to ensure quality of service for its users. You can review a list of these limits [here](https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm)
 
 Doug Tangren (softprops) 2018
