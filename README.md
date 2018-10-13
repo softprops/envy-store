@@ -14,7 +14,7 @@ envy-store = "0.1"
 ## 🤸 Usage
 
 Envy store assumes you are using the AWS best practice of [storing related parameters under
-a prefixed heirarchy](https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/).
+a prefixed hierarchy](https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/).
 This leads to better clarity on what application a set of parameters belong to as well as enables
 the paths based query API which has performance benefits and is the recommended best practice by AWS.
 
