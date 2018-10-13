@@ -74,7 +74,8 @@ where
 }
 
 /// Resolves parameter store values and deserializes them into
-/// a typesafe struct. Similar to [from_path](fn.from_path.html) but also accepts a customized `Ssm`
+/// a typesafe struct. Similar to [from_path](fn.from_path.html) but
+/// also accepts a customized `rusoto_ssm::Ssm`
 /// implementation
 pub fn from_client<T, C>(
     client: C,
