@@ -1,31 +1,77 @@
+//! Envy store provides a means to resolve a collection of [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html)
+//! values at runtime required for an application to run and deserialize them into a type safe struct.
+//!
+//! The idea here is that applications that may have previously used the [12-factor practice](https://12factor.net/config)
+//! of storing configuration in environment variables, perhaps deserializing them using [envy](https://crates.io/crates/envy),
+//! are now configured using the same pattern but resolving values from AWS Parameter Store instead
+//!
+//! This crate assumes you are using the AWS best practice of [storing related parameters under
+//! a prefixed heirarchy](https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/).
+//! This leads to better clarity on what application a set of parameters belong to as well as enables
+//! the paths based query API which has performance benefits and is the recommended best practice by AWS.
+//!
+//! # Example
+//!
+//! ```rust,norun
+//! extern crate envy_store;
+//! #[macro_use]
+//! extern crate serde_derive;
+//!
+//! /// Type resolvable by prefixed parameter store values
+//! /// aws ssm put-parameter --name /demo/foo --value bar --type SecureString
+//! /// aws ssm put-parameter --name /demo/bar --value baz,boom,zoom --type StringList
+//! /// aws ssm put-parameter --name /demo/zar --value 42 --type String
+//! #[derive(Deserialize)]
+//! struct Config {
+//!   foo: String,
+//!   bar: Vec<String>,
+//!   zar: u32,
+//! }
+//!
+//! fn main() {
+//!    // Returns a `Future` containing the result of a deserialized `Config` type
+//!    let config = envy_store::from_path::<Config>(
+//!      "/demo".into()
+//!    );
+//! }
+//! ```
+#![deny(missing_docs)]
 extern crate envy;
 extern crate futures;
 extern crate rusoto_ssm;
 extern crate serde;
 
+mod error;
+
+// Std lib
 use std::collections::HashMap;
 
+// Third party
+
 use futures::{stream, Future, Stream};
-use rusoto_ssm::{GetParametersByPathError, GetParametersByPathRequest, Ssm};
+use rusoto_ssm::{GetParametersByPathRequest, Ssm, SsmClient};
 use serde::de::DeserializeOwned;
 
-enum Error {
-  Store(GetParametersByPathError),
-  Envy(envy::Error),
+// Ours
+
+pub use error::Error;
+
+/// Resolves parameter store values and deserialize them into
+/// a typesafe struct
+///
+/// `path_prefix` is assumed to be the path prefixed, e.g `/sweet-app/prod`.
+/// Parameter store value names are then expected be of the form `/sweet-app/prod/db-pass`
+/// `/sweet-app/prod/db-username`, and so forth.
+pub fn from_path<T>(path_prefix: String) -> impl Future<Item = T, Error = Error>
+where
+  T: DeserializeOwned,
+{
+  ::from_client(SsmClient::new(Default::default()), path_prefix)
 }
 
-impl From<GetParametersByPathError> for Error {
-  fn from(err: GetParametersByPathError) -> Self {
-    Error::Store(err)
-  }
-}
-
-impl From<envy::Error> for Error {
-  fn from(err: envy::Error) -> Self {
-    Error::Envy(err)
-  }
-}
-
+/// Resolves parameter store values and deserializes them into
+/// a typesafe struct. Similar to [from_path](fn.from_path.html) but also accepts a customized `Ssm`
+/// implementation
 pub fn from_client<T, C>(client: C, path_prefix: String) -> impl Future<Item = T, Error = Error>
 where
   T: DeserializeOwned,
@@ -36,6 +82,7 @@ where
     Next(String),
     End,
   }
+  let prefix_strip = path_prefix.len() + 1;
   stream::unfold(PageState::Start(None), move |state| {
     let next_token = match state {
       PageState::Start(start) => start,
@@ -47,6 +94,7 @@ where
         .get_parameters_by_path(GetParametersByPathRequest {
           next_token,
           path: path_prefix.clone(),
+          with_decryption: Some(true),
           ..GetParametersByPathRequest::default()
         }).map_err(Error::from)
         .map(move |resp| {
@@ -68,7 +116,7 @@ where
     )
   }).flatten()
   .collect()
-  .and_then(|parameters| {
+  .and_then(move |parameters| {
     envy::from_iter::<_, T>(
       parameters
         .into_iter()
@@ -76,7 +124,7 @@ where
           HashMap::new(),
           |mut result: HashMap<String, String>, param| {
             if let (Some(name), Some(value)) = (param.name, param.value) {
-              result.insert(name, value);
+              result.insert(name[prefix_strip..].to_string(), value);
             }
             result
           },
