@@ -1,0 +1,20 @@
+[package]
+name = "envy-store"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+description = "deserialize AWS parameter store values into typesafe structs"
+documentation = "https://softprops.github.io/envy-store"
+homepage = "https://github.com/softprops/envy-store"
+repository = "https://github.com/softprops/envy-store"
+keywords = ["serde", "aws", "parameter-store"]
+license = "MIT"
+
+
+[dependencies]
+envy = "0.3"
+serde = "1.0"
+rusoto_ssm = "0.34"
+futures = "0.1"
+
+[dev-dependencies]
+serde_derive = "1.0"
