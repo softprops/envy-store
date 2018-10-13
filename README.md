@@ -13,6 +13,15 @@ envy-store = "0.1"
 
 ## 🤸 Usage
 
+Envy store assumes you are using the AWS best practice of [storing related parameters under
+a prefixed heirarchy](https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/).
+This leads to better clarity on what application a set of parameters belong to as well as enables
+the paths based query API which has performance benefits and is the recommended best practice by AWS.
+
+Envy store also assumes the use of the [AWS default credential chain](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html) for authenticating requests
+with AWS. Don't worry, if you've used any AWS tooling in the past, you likely already have this configured. You will also need to ensure these credentials have the `ssm:GetParametersByPath` [IAM permission](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html).
+
+
 See the [demo example](examples/demo.rs) for an example application and [documentation](https://softprops.github.io/envy-store) for more information
 
 ## 🤔 Why AWS Parameter Store
