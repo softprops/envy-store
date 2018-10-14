@@ -17,6 +17,6 @@ struct Config {
 
 fn main() {
     let mut rt = Runtime::new().expect("failed to initialize runtime");
-    let conf = envy_store::from_path::<Config>("/demo".into());
+    let conf = envy_store::from_path::<Config, _>("/demo");
     println!("config {:#?}", rt.block_on(conf))
 }
