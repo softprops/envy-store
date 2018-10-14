@@ -79,7 +79,10 @@ where
 /// a typesafe struct. Similar to [from_path](fn.from_path.html) but
 /// also accepts a customized `rusoto_ssm::Ssm`
 /// implementation
-pub fn from_client<T, C, P>(client: C, path_prefix: P) -> impl Future<Item = T, Error = Error>
+pub fn from_client<T, C, P>(
+    client: C,
+    path_prefix: P,
+) -> impl Future<Item = T, Error = Error>
 where
     T: DeserializeOwned,
     C: Ssm,
@@ -110,7 +113,8 @@ where
                     with_decryption: Some(true),
                     recursive: Some(true),
                     ..GetParametersByPathRequest::default()
-                }).map_err(Error::from)
+                })
+                .map_err(Error::from)
                 .map(move |resp| {
                     let next_state = match resp.next_token {
                         Some(next) => {
@@ -128,7 +132,8 @@ where
                     )
                 }),
         )
-    }).flatten()
+    })
+    .flatten()
     .collect()
     .and_then(move |parameters| {
         envy::from_iter::<_, T>(
@@ -142,7 +147,9 @@ where
                         }
                         result
                     },
-                ).into_iter(),
-        ).map_err(Error::from)
+                )
+                .into_iter(),
+        )
+        .map_err(Error::from)
     })
 }
