@@ -2,8 +2,6 @@
 
 > 🏪 deserialize [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html) values into typesafe structs
 
-> 👭 Consider this a cousin of [envy](https://github.com/softprops/envy) a crate for deserializing environment variables into typesafe structs.
-
 ## 📦 Install
 
 ```toml
@@ -12,6 +10,8 @@ envy-store = "0.1"
 ```
 
 ## 🤸 Usage
+
+> 👭 Consider this a cousin of [envy](https://github.com/softprops/envy) a crate for deserializing environment variables into typesafe structs.
 
 Envy store assumes you are using the AWS best practice of [storing related parameters under
 a prefixed hierarchy](https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/).
