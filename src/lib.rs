@@ -34,8 +34,8 @@
 //!
 //! fn main() {
 //!    // Returns a `Future` containing the result of a deserialized `Config` type
-//!    let config = envy_store::from_path::<Config>(
-//!      "/demo".into()
+//!    let config = envy_store::from_path::<Config, _>(
+//!      "/demo"
 //!    );
 //! }
 //! ```
@@ -49,6 +49,7 @@ mod error;
 
 // Std lib
 use std::collections::HashMap;
+use std::path::Path;
 
 // Third party
 
@@ -66,9 +67,10 @@ pub use error::Error;
 /// `path_prefix` is assumed to be the path prefixed, e.g `/sweet-app/prod`.
 /// Parameter store value names are then expected be of the form `/sweet-app/prod/db-pass`
 /// `/sweet-app/prod/db-username`, and so forth.
-pub fn from_path<T>(path_prefix: String) -> impl Future<Item = T, Error = Error>
+pub fn from_path<T, P>(path_prefix: P) -> impl Future<Item = T, Error = Error>
 where
     T: DeserializeOwned,
+    P: AsRef<Path>,
 {
     ::from_client(SsmClient::new(Default::default()), path_prefix)
 }
@@ -77,20 +79,23 @@ where
 /// a typesafe struct. Similar to [from_path](fn.from_path.html) but
 /// also accepts a customized `rusoto_ssm::Ssm`
 /// implementation
-pub fn from_client<T, C>(
-    client: C,
-    path_prefix: String,
-) -> impl Future<Item = T, Error = Error>
+pub fn from_client<T, C, P>(client: C, path_prefix: P) -> impl Future<Item = T, Error = Error>
 where
     T: DeserializeOwned,
     C: Ssm,
+    P: AsRef<Path>,
 {
     enum PageState {
         Start(Option<String>),
         Next(String),
         End,
     }
-    let prefix_strip = path_prefix.len() + 1;
+    let prefix = path_prefix
+        .as_ref()
+        .to_str()
+        .unwrap_or_default()
+        .to_string();
+    let prefix_strip = prefix.len() + 1;
     stream::unfold(PageState::Start(None), move |state| {
         let next_token = match state {
             PageState::Start(start) => start,
@@ -101,11 +106,11 @@ where
             client
                 .get_parameters_by_path(GetParametersByPathRequest {
                     next_token,
-                    path: path_prefix.clone(),
+                    path: prefix.clone(),
                     with_decryption: Some(true),
+                    recursive: Some(true),
                     ..GetParametersByPathRequest::default()
-                })
-                .map_err(Error::from)
+                }).map_err(Error::from)
                 .map(move |resp| {
                     let next_state = match resp.next_token {
                         Some(next) => {
@@ -123,8 +128,7 @@ where
                     )
                 }),
         )
-    })
-    .flatten()
+    }).flatten()
     .collect()
     .and_then(move |parameters| {
         envy::from_iter::<_, T>(
@@ -138,9 +142,7 @@ where
                         }
                         result
                     },
-                )
-                .into_iter(),
-        )
-        .map_err(Error::from)
+                ).into_iter(),
+        ).map_err(Error::from)
     })
 }
