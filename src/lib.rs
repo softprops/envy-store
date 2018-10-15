@@ -67,9 +67,9 @@ pub use error::Error;
 /// `path_prefix` is assumed to be the path prefixed, e.g `/sweet-app/prod`.
 /// Parameter store value names are then expected be of the form `/sweet-app/prod/db-pass`
 /// `/sweet-app/prod/db-username`, and so forth.
-pub fn from_path<T, P>(path_prefix: P) -> impl Future<Item = T, Error = Error>
+pub fn from_path<T, P>(path_prefix: P) -> impl Future<Item = T, Error = Error> + Send
 where
-    T: DeserializeOwned,
+    T: DeserializeOwned + Send,
     P: AsRef<Path>,
 {
     ::from_client(SsmClient::new(Default::default()), path_prefix)
@@ -82,10 +82,10 @@ where
 pub fn from_client<T, C, P>(
     client: C,
     path_prefix: P,
-) -> impl Future<Item = T, Error = Error>
+) -> impl Future<Item = T, Error = Error> + Send
 where
-    T: DeserializeOwned,
-    C: Ssm,
+    T: DeserializeOwned + Send,
+    C: Ssm + Send,
     P: AsRef<Path>,
 {
     enum PageState {
