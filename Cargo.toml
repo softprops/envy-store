@@ -9,6 +9,13 @@ repository = "https://github.com/softprops/envy-store"
 keywords = ["serde", "aws", "parameter-store", "config"]
 license = "MIT"
 readme = "README.md"
+categories = [
+  "config"
+]
+
+[badges]
+coveralls = { repository = "softprops/envy-store"}
+travis-ci = { repository = "softprops/envy-store"}
 
 [dependencies]
 envy = "0.3"
