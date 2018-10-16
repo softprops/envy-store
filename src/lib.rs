@@ -44,6 +44,9 @@ extern crate envy;
 extern crate futures;
 extern crate rusoto_ssm;
 extern crate serde;
+#[cfg(test)]
+#[macro_use]
+extern crate maplit;
 
 mod error;
 
@@ -54,7 +57,7 @@ use std::path::Path;
 // Third party
 
 use futures::{stream, Future, Stream};
-use rusoto_ssm::{GetParametersByPathRequest, Ssm, SsmClient};
+use rusoto_ssm::{GetParametersByPathRequest, Parameter, Ssm, SsmClient};
 use serde::de::DeserializeOwned;
 
 // Ours
@@ -135,21 +138,48 @@ where
     })
     .flatten()
     .collect()
-    .and_then(move |parameters| {
-        envy::from_iter::<_, T>(
-            parameters
-                .into_iter()
-                .fold(
-                    HashMap::new(),
-                    |mut result: HashMap<String, String>, param| {
-                        if let (Some(name), Some(value)) = (param.name, param.value) {
-                            result.insert(name[prefix_strip..].to_string(), value);
-                        }
-                        result
-                    },
-                )
-                .into_iter(),
+    .and_then(move |parameters| deserialize(prefix_strip, parameters))
+}
+
+fn deserialize<T>(
+    prefix_strip: usize,
+    parameters: Vec<Parameter>,
+) -> Result<T, Error>
+where
+    T: DeserializeOwned + Send,
+{
+    envy::from_iter::<_, T>(
+        parameters
+            .into_iter()
+            .fold(
+                HashMap::new(),
+                |mut result: HashMap<String, String>, param| {
+                    if let (Some(name), Some(value)) = (param.name, param.value) {
+                        result.insert(name[prefix_strip..].to_string(), value);
+                    }
+                    result
+                },
+            )
+            .into_iter(),
+    )
+    .map_err(Error::from)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn deserializes_with_expected_parameters() {
+        let parameters = vec![Parameter {
+            name: Some("/test/foo".into()),
+            value: Some("bar".into()),
+            ..Parameter::default()
+        }];
+        assert_eq!(
+            Ok(hashmap!("foo".to_string() => "bar".to_string())),
+            deserialize(6, parameters)
         )
-        .map_err(Error::from)
-    })
+    }
 }

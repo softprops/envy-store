@@ -7,7 +7,7 @@ use envy;
 use rusoto_ssm::GetParametersByPathError;
 
 /// Represents possible errors
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Returned when parameter store request fails
     Store(GetParametersByPathError),
