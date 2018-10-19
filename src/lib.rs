@@ -47,6 +47,10 @@ extern crate serde;
 #[cfg(test)]
 #[macro_use]
 extern crate maplit;
+#[cfg(test)]
+extern crate rusoto_mock;
+#[cfg(test)]
+extern crate serde_json;
 
 mod error;
 
@@ -169,6 +173,27 @@ where
 mod tests {
 
     use super::*;
+    use rusoto_mock::{MockCredentialsProvider, MockRequestDispatcher};
+
+    #[test]
+    fn deserializes_from_client() {
+        let mock = MockRequestDispatcher::with_status(200).with_body(
+            r#"{
+            "Parameters": [
+                { "Name": "/test/foo", "Value": "bar" }
+            ]
+        }"#,
+        );
+
+        assert_eq!(
+            Ok(hashmap!("foo".to_string() => "bar".to_string())),
+            from_client::<HashMap<String, String>, _, _>(
+                SsmClient::new_with(mock, MockCredentialsProvider, Default::default()),
+                "/test",
+            )
+            .wait()
+        )
+    }
 
     #[test]
     fn deserializes_with_expected_parameters() {
