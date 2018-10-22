@@ -152,20 +152,15 @@ fn deserialize<T>(
 where
     T: DeserializeOwned + Send,
 {
-    envy::from_iter::<_, T>(
-        parameters
-            .into_iter()
-            .fold(
-                HashMap::new(),
-                |mut result: HashMap<String, String>, param| {
-                    if let (Some(name), Some(value)) = (param.name, param.value) {
-                        result.insert(name[prefix_strip..].to_string(), value);
-                    }
-                    result
-                },
-            )
-            .into_iter(),
-    )
+    envy::from_iter::<_, T>(parameters.into_iter().fold(
+        HashMap::new(),
+        |mut result: HashMap<String, String>, param| {
+            if let (Some(name), Some(value)) = (param.name, param.value) {
+                result.insert(name[prefix_strip..].to_string(), value);
+            }
+            result
+        },
+    ))
     .map_err(Error::from)
 }
 
