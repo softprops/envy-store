@@ -16,7 +16,7 @@
 //!
 //! # Example
 //!
-//! ```rust,norun
+//! ```no_run
 //! extern crate envy_store;
 //! #[macro_use]
 //! extern crate serde_derive;
