@@ -45,10 +45,10 @@ extern crate maplit;
 mod error;
 
 // Std lib
-use std::{collections::HashMap, path::Path};
 use futures::{stream, Future, Stream};
 use rusoto_ssm::{GetParametersByPathRequest, Parameter, Ssm, SsmClient};
 use serde::de::DeserializeOwned;
+use std::{collections::HashMap, path::Path};
 
 // Ours
 
@@ -160,23 +160,22 @@ mod tests {
 
     #[test]
     fn deserializes_from_client() {
-        let mock =
-            MockRequestDispatcher::with_status(200).with_json_body(serde_json::json!({
-                "Parameters": [
-                    {
-                        "Name": "/test/foo".to_string(),
-                        "Value": "bar".to_string()
-                    }
-                ]
-            }));/**fixme: does not compile => GetParametersByPathResult {
-                parameters: Some(vec![Parameter {
-                    name: Some("/test/foo".into()),
-                    value: Some("bar".into()),
-                    ..Parameter::default()
-                }]),
-                ..GetParametersByPathResult::default()
-            });*/
-
+        let mock = MockRequestDispatcher::with_status(200).with_json_body(serde_json::json!({
+            "Parameters": [
+                {
+                    "Name": "/test/foo".to_string(),
+                    "Value": "bar".to_string()
+                }
+            ]
+        }));
+        /**fixme: does not compile => GetParametersByPathResult {
+            parameters: Some(vec![Parameter {
+                name: Some("/test/foo".into()),
+                value: Some("bar".into()),
+                ..Parameter::default()
+            }]),
+            ..GetParametersByPathResult::default()
+        });*/
         assert_eq!(
             Ok(maplit::hashmap!("foo".to_string() => "bar".to_string())),
             from_client::<HashMap<String, String>, _, _>(
