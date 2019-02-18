@@ -9,6 +9,7 @@ repository = "https://github.com/softprops/envy-store"
 keywords = ["serde", "aws", "parameter-store", "config"]
 license = "MIT"
 readme = "README.md"
+edition = "2018"
 categories = [
   "config"
 ]
@@ -26,6 +27,6 @@ futures = "0.1"
 [dev-dependencies]
 maplit = "1.0"
 rusoto_mock = "0.30"
-serde_derive = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = "0.1"

@@ -1,8 +1,5 @@
-extern crate envy_store;
-#[macro_use]
-extern crate serde_derive;
-extern crate tokio;
 
+use serde::Deserialize;
 use tokio::runtime::Runtime;
 
 // AWS_PROFILE=... aws ssm put-parameter --name /demo/foo --value bar --type SecureString
