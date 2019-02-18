@@ -18,7 +18,7 @@ coveralls = { repository = "softprops/envy-store"}
 travis-ci = { repository = "softprops/envy-store"}
 
 [dependencies]
-envy = "0.3"
+envy = "0.4"
 serde = "1.0"
 rusoto_ssm = "0.36"
 futures = "0.1"
