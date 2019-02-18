@@ -20,12 +20,12 @@ travis-ci = { repository = "softprops/envy-store"}
 [dependencies]
 envy = "0.3"
 serde = "1.0"
-rusoto_ssm = "0.34"
+rusoto_ssm = "0.36"
 futures = "0.1"
 
 [dev-dependencies]
 maplit = "1.0"
-rusoto_mock = "0.28"
+rusoto_mock = "0.30"
 serde_derive = "1.0"
 serde_json = "1.0"
 tokio = "0.1"
