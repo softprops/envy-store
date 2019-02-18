@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `envy_store` crate."><meta name="keywords" content="rust, rustlang, rust-lang, envy_store"><title>envy_store - Rust</title><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../dark.css"><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script src="../storage.js"></script></head><body class="rustdoc mod"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><p class='location'>Crate envy_store</p><div class="sidebar-elems"><a id='all-types' href='all.html'><p>See all envy_store's items</p></a><div class="block items"><ul><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></div><p class='location'></p><script>window.sidebarCurrent = {name: 'envy_store', ty: 'mod', relpath: '../'};</script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../theme.js"></script><nav class="sub"><form class="search-form js-only"><div class="search-container"><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><h1 class='fqn'><span class='out-of-band'><span id='render-detail'><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class='inner'>&#x2212;</span>]</a></span><a class='srclink' href='../src/envy_store/lib.rs.html#1-201' title='goto source code'>[src]</a></span><span class='in-band'>Crate <a class="mod" href=''>envy_store</a></span></h1><div class='docblock'><p>Envy store provides a means to resolve a collection of <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html">AWS Parameter Store</a>
+values at runtime required for an application to run and deserialize them into a type safe struct.</p>
+<p>The idea here is that applications that may have previously used the <a href="https://12factor.net/config">12-factor practice</a>
+of storing configuration in environment variables, perhaps deserializing them using <a href="https://crates.io/crates/envy">envy</a>,
+are now configured using the same pattern but resolving values from AWS Parameter Store instead</p>
+<p>This crate assumes you are using the AWS best practice of <a href="https://aws.amazon.com/blogs/mt/organize-parameters-by-hierarchy-tags-or-amazon-cloudwatch-events-with-amazon-ec2-systems-manager-parameter-store/">storing related parameters under
+a prefixed hierarchy</a>.
+This leads to better clarity on what application a set of parameters belong to as well as enables
+the paths based query API which has performance benefits and is the recommended best practice by AWS.</p>
+<p>This crate assumes the use of the <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html">AWS default credential chain</a> for authenticating requests
+with AWS. Don't worry, if you've used any AWS tooling in the past, you likely already have this configured.
+You will also need to ensure these credentials have the <code>ssm:GetParametersByPath</code> <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html">IAM permission</a>.</p>
+<h1 id="example" class="section-header"><a href="#example">Example</a></h1>
+<div class="example-wrap"><pre class="rust rust-example-rendered">
+<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
+
+<span class="doccomment">/// Type resolvable by prefixed parameter store values</span>
+<span class="doccomment">/// aws ssm put-parameter --name /demo/foo --value bar --type SecureString</span>
+<span class="doccomment">/// aws ssm put-parameter --name /demo/bar --value baz,boom,zoom --type StringList</span>
+<span class="doccomment">/// aws ssm put-parameter --name /demo/zar --value 42 --type String</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Deserialize</span>)]</span>
+<span class="kw">struct</span> <span class="ident">Config</span> {
+  <span class="ident">foo</span>: <span class="ident">String</span>,
+  <span class="ident">bar</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+  <span class="ident">zar</span>: <span class="ident">u32</span>,
+}
+
+<span class="kw">fn</span> <span class="ident">main</span>() {
+   <span class="comment">// Returns a `Future` containing the result of a deserialized `Config` type</span>
+   <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">envy_store</span>::<span class="ident">from_path</span>::<span class="op">&lt;</span><span class="ident">Config</span>, <span class="kw">_</span><span class="op">&gt;</span>(
+     <span class="string">&quot;/demo&quot;</span>
+   );
+}</pre></div>
+</div><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table><tr class='module-item'><td><a class="enum" href="enum.Error.html" title='envy_store::Error enum'>Error</a></td><td class='docblock-short'><p>Represents possible errors</p>
+</td></tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table><tr class='module-item'><td><a class="fn" href="fn.from_client.html" title='envy_store::from_client fn'>from_client</a></td><td class='docblock-short'><p>Resolves parameter store values and deserializes them into
+a typesafe struct. Similar to <a href="fn.from_path.html">from_path</a> but
+also accepts a customized <code>rusoto_ssm::Ssm</code>
+implementation</p>
+</td></tr><tr class='module-item'><td><a class="fn" href="fn.from_path.html" title='envy_store::from_path fn'>from_path</a></td><td class='docblock-short'><p>Resolves parameter store values and deserialize them into
+a typesafe struct</p>
+</td></tr></table></section><section id="search" class="content hidden"></section><section class="footer"></section><aside id="help" class="hidden"><div><h1 class="hidden">Help</h1><div class="shortcuts"><h2>Keyboard Shortcuts</h2><dl><dt><kbd>?</kbd></dt><dd>Show this help dialog</dd><dt><kbd>S</kbd></dt><dd>Focus the search field</dd><dt><kbd>↑</kbd></dt><dd>Move up in search results</dd><dt><kbd>↓</kbd></dt><dd>Move down in search results</dd><dt><kbd>↹</kbd></dt><dd>Switch tab</dd><dt><kbd>&#9166;</kbd></dt><dd>Go to active search result</dd><dt><kbd>+</kbd></dt><dd>Expand all sections</dd><dt><kbd>-</kbd></dt><dd>Collapse all sections</dd></dl></div><div class="infos"><h2>Search Tricks</h2><p>Prefix searches with a type followed by a colon (e.g. <code>fn:</code>) to restrict the search to a given type.</p><p>Accepted types are: <code>fn</code>, <code>mod</code>, <code>struct</code>, <code>enum</code>, <code>trait</code>, <code>type</code>, <code>macro</code>, and <code>const</code>.</p><p>Search functions by type signature (e.g. <code>vec -> usize</code> or <code>* -> vec</code>)</p><p>Search multiple things at once by splitting your query with comma (e.g. <code>str,u8</code> or <code>String,struct:Vec,test</code>)</p></div></div></aside><script>window.rootPath = "../";window.currentCrate = "envy_store";</script><script src="../aliases.js"></script><script src="../main.js"></script><script defer src="../search-index.js"></script></body></html>

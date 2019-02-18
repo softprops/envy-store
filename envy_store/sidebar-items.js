@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Represents possible errors"]],"fn":[["from_client","Resolves parameter store values and deserializes them into a typesafe struct. Similar to from_path but also accepts a customized `rusoto_ssm::Ssm` implementation"],["from_path","Resolves parameter store values and deserialize them into a typesafe struct"]]});
