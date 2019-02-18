@@ -55,8 +55,7 @@ extern crate serde_json;
 mod error;
 
 // Std lib
-use std::collections::HashMap;
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 // Third party
 
@@ -166,19 +165,23 @@ where
 
 #[cfg(test)]
 mod tests {
-
-    use super::*;
+    use super::{deserialize, from_client};
+    use futures::Future;
     use rusoto_mock::{MockCredentialsProvider, MockRequestDispatcher};
+    use rusoto_ssm::{GetParametersByPathResult, Parameter, SsmClient};
+    use std::collections::HashMap;
 
     #[test]
     fn deserializes_from_client() {
-        let mock = MockRequestDispatcher::with_status(200).with_body(
-            r#"{
-            "Parameters": [
-                { "Name": "/test/foo", "Value": "bar" }
-            ]
-        }"#,
-        );
+        let mock =
+            MockRequestDispatcher::with_status(200).with_json_body(GetParametersByPathResult {
+                parameters: Some(vec![Parameter {
+                    name: Some("/test/foo".into()),
+                    value: Some("bar".into()),
+                    ..Parameter::default()
+                }]),
+                ..GetParametersByPathResult::default()
+            });
 
         assert_eq!(
             Ok(hashmap!("foo".to_string() => "bar".to_string())),

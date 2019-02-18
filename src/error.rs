@@ -1,6 +1,5 @@
 // Std lib
-use std::error::Error as StdError;
-use std::fmt;
+use std::{error::Error as StdError, fmt};
 
 // Third party
 use envy;
