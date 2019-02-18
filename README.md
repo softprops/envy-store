@@ -6,7 +6,7 @@
 
 ```toml
 [dependencies]
-envy-store = "0.1"
+envy-store = "0."
 ```
 
 ## 🤸 Usage

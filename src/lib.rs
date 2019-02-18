@@ -17,9 +17,7 @@
 //! # Example
 //!
 //! ```no_run
-//! extern crate envy_store;
-//! #[macro_use]
-//! extern crate serde_derive;
+//! use serde::Deserialize;
 //!
 //! /// Type resolvable by prefixed parameter store values
 //! /// aws ssm put-parameter --name /demo/foo --value bar --type SecureString
@@ -40,32 +38,21 @@
 //! }
 //! ```
 #![deny(missing_docs)]
-extern crate envy;
-extern crate futures;
-extern crate rusoto_ssm;
-extern crate serde;
 #[cfg(test)]
 #[macro_use]
 extern crate maplit;
-#[cfg(test)]
-extern crate rusoto_mock;
-#[cfg(test)]
-extern crate serde_json;
 
 mod error;
 
 // Std lib
-use std::{collections::HashMap, path::Path};
-
-// Third party
-
 use futures::{stream, Future, Stream};
 use rusoto_ssm::{GetParametersByPathRequest, Parameter, Ssm, SsmClient};
 use serde::de::DeserializeOwned;
+use std::{collections::HashMap, path::Path};
 
 // Ours
 
-pub use error::Error;
+pub use crate::error::Error;
 
 /// Resolves parameter store values and deserialize them into
 /// a typesafe struct
@@ -78,7 +65,7 @@ where
     T: DeserializeOwned + Send,
     P: AsRef<Path>,
 {
-    ::from_client(SsmClient::new(Default::default()), path_prefix)
+    crate::from_client(SsmClient::new(Default::default()), path_prefix)
 }
 
 /// Resolves parameter store values and deserializes them into
@@ -168,23 +155,29 @@ mod tests {
     use super::{deserialize, from_client};
     use futures::Future;
     use rusoto_mock::{MockCredentialsProvider, MockRequestDispatcher};
-    use rusoto_ssm::{GetParametersByPathResult, Parameter, SsmClient};
+    use rusoto_ssm::{Parameter, SsmClient};
     use std::collections::HashMap;
 
     #[test]
     fn deserializes_from_client() {
-        let mock =
-            MockRequestDispatcher::with_status(200).with_json_body(GetParametersByPathResult {
-                parameters: Some(vec![Parameter {
-                    name: Some("/test/foo".into()),
-                    value: Some("bar".into()),
-                    ..Parameter::default()
-                }]),
-                ..GetParametersByPathResult::default()
-            });
-
+        let mock = MockRequestDispatcher::with_status(200).with_json_body(serde_json::json!({
+            "Parameters": [
+                {
+                    "Name": "/test/foo".to_string(),
+                    "Value": "bar".to_string()
+                }
+            ]
+        }));
+        /**fixme: does not compile => GetParametersByPathResult {
+            parameters: Some(vec![Parameter {
+                name: Some("/test/foo".into()),
+                value: Some("bar".into()),
+                ..Parameter::default()
+            }]),
+            ..GetParametersByPathResult::default()
+        });*/
         assert_eq!(
-            Ok(hashmap!("foo".to_string() => "bar".to_string())),
+            Ok(maplit::hashmap!("foo".to_string() => "bar".to_string())),
             from_client::<HashMap<String, String>, _, _>(
                 SsmClient::new_with(mock, MockCredentialsProvider, Default::default()),
                 "/test",
