@@ -26,7 +26,7 @@ futures = "0.1"
 
 [dev-dependencies]
 maplit = "1.0"
-rusoto_mock = "0.30"
+rusoto_mock = "0.44"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = "0.1"
